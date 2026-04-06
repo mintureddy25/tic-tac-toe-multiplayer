@@ -124,26 +124,209 @@ Open `http://localhost:3000` in two browser tabs. Enter different names, click "
 
 ## Deployment
 
-### Backend
+### Live URLs
 
-1. Provision a server with Docker installed (AWS EC2, DigitalOcean, GCP, etc.)
-2. Clone the repo and run:
-   ```bash
-   cd backend
-   npm install && npm run build
-   docker compose up -d
-   ```
-3. Open port 7350 (game API) and optionally 7351 (admin console)
-4. For HTTPS, use nginx/Caddy as reverse proxy with SSL
+| Service | URL |
+|---------|-----|
+| **Game (Frontend)** | Hosted on Vercel |
+| **Nakama API** | `https://nakamaapi.saitejareddy.online` |
+| **Admin Console** | `https://nakama.saitejareddy.online` |
 
-### Frontend
+### Cloud Deployment Guide (AWS EC2)
+
+This is a step-by-step guide to deploy the full stack on an AWS EC2 instance.
+
+#### 1. Provision an EC2 Instance
+
+- **AMI**: Amazon Linux 2023
+- **Instance type**: t2.micro or t3.small (minimum 1 vCPU, 1GB RAM)
+- **Security Group inbound rules**:
+  - SSH (22) — your IP
+  - HTTP (80) — anywhere
+  - HTTPS (443) — anywhere
+  - Custom TCP (7350) — anywhere (Nakama API, optional if using nginx proxy)
+  - Custom TCP (7351) — anywhere (Admin console, optional if using nginx proxy)
+- **Key pair**: Download `.pem` file for SSH access
+
+#### 2. SSH into the Server
 
 ```bash
-cd frontend
-REACT_APP_NAKAMA_HOST=your-server.com REACT_APP_NAKAMA_SSL=true npm run build
+ssh -i "your-key.pem" ec2-user@your-ec2-public-ip
 ```
 
-Deploy the `build/` folder to Vercel, Netlify, S3+CloudFront, or any static hosting.
+#### 3. Install Required Software
+
+```bash
+# Update system
+sudo yum update -y
+
+# Install Node.js
+sudo yum install -y nodejs npm
+
+# Install Docker
+sudo yum install -y docker
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" \
+  -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Install Nginx
+sudo yum install -y nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# Install Certbot (for SSL)
+sudo yum install -y certbot python3-certbot-nginx
+
+# Install PM2 (optional, for process management)
+sudo npm install -g pm2
+
+# Apply docker group (re-login or use sg)
+newgrp docker
+```
+
+#### 4. Clone and Build
+
+```bash
+cd ~
+git clone https://github.com/mintureddy25/tic-tac-toe-multiplayer.git
+cd tic-tac-toe-multiplayer/backend
+
+# Set up environment
+cp .env.example .env
+# Edit .env with secure passwords for production
+nano .env
+
+# Install dependencies and build
+npm install
+npm run build
+
+# Start Nakama + PostgreSQL
+docker-compose up -d
+```
+
+Wait ~15 seconds, then verify:
+
+```bash
+curl http://localhost:7350/healthcheck
+# Should return: {}
+```
+
+#### 5. Domain Configuration
+
+Add DNS A records pointing to your EC2 public IP:
+
+| Type | Host | Value |
+|------|------|-------|
+| A Record | `nakamaapi` | `your-ec2-ip` |
+| A Record | `nakama` | `your-ec2-ip` |
+
+Wait for DNS propagation (1-5 minutes). Verify:
+
+```bash
+nslookup nakamaapi.yourdomain.com
+nslookup nakama.yourdomain.com
+```
+
+#### 6. Nginx Configuration
+
+Create the nginx config file:
+
+```bash
+sudo nano /etc/nginx/conf.d/nakama.conf
+```
+
+Add the following configuration:
+
+```nginx
+# Nakama Game API + WebSocket
+server {
+    server_name nakamaapi.yourdomain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:7350;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400;
+    }
+
+    listen 80;
+}
+
+# Nakama Admin Console
+server {
+    server_name nakama.yourdomain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:7351;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 80;
+}
+```
+
+Test and reload:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### 7. SSL Certificates (Let's Encrypt)
+
+```bash
+# API domain
+sudo certbot --nginx -d nakamaapi.yourdomain.com \
+  --non-interactive --agree-tos --email your-email@example.com
+
+# Admin console domain
+sudo certbot --nginx -d nakama.yourdomain.com \
+  --non-interactive --agree-tos --email your-email@example.com
+```
+
+Certbot automatically updates the nginx config with SSL settings and sets up auto-renewal.
+
+Verify HTTPS works:
+
+```bash
+curl https://nakamaapi.yourdomain.com/healthcheck
+# Should return: {}
+```
+
+#### 8. Frontend Deployment (Vercel)
+
+1. Push the repo to GitHub
+2. Go to [vercel.com](https://vercel.com), import the repository
+3. Set the root directory to `frontend`
+4. Add environment variables in Vercel dashboard:
+
+   ```
+   REACT_APP_NAKAMA_HOST=nakamaapi.yourdomain.com
+   REACT_APP_NAKAMA_PORT=443
+   REACT_APP_NAKAMA_SSL=true
+   ```
+
+5. Deploy — Vercel builds and hosts the frontend automatically
+
+#### 9. Verify Deployment
+
+- **Frontend**: Open your Vercel URL in two browser tabs
+- **API**: `curl https://nakamaapi.yourdomain.com/healthcheck`
+- **Admin**: Open `https://nakama.yourdomain.com` in browser (login with credentials from `.env`)
 
 ## API Reference
 
@@ -176,11 +359,14 @@ Deploy the `build/` folder to Vercel, Netlify, S3+CloudFront, or any static host
 
 ## Admin Console
 
-Access the Nakama admin console at `http://localhost:7351`:
-- **Username**: admin
-- **Password**: password
+| Environment | URL |
+|-------------|-----|
+| **Local** | `http://localhost:7351` |
+| **Production** | `https://nakama.saitejareddy.online` |
 
-View accounts, storage data, leaderboard records, and active matches.
+Login credentials are configured in `backend/.env` (`NAKAMA_CONSOLE_USERNAME` and `NAKAMA_CONSOLE_PASSWORD`).
+
+The console provides access to accounts, storage data, leaderboard records, active matches, and server logs.
 
 ## Project Structure
 
@@ -193,8 +379,9 @@ View accounts, storage data, leaderboard records, and active matches.
 │   │   ├── leaderboard.ts       # Leaderboard initialization & queries
 │   │   └── rpc.ts               # Health check, online count
 │   ├── types/                   # Nakama runtime type definitions
-│   ├── docker-compose.yml       # Nakama + PostgreSQL
-│   ├── local.yml                # Nakama config
+│   ├── docker-compose.yml       # Nakama + PostgreSQL (uses .env)
+│   ├── .env.example             # Backend environment template
+│   ├── local.yml                # Nakama runtime config
 │   ├── rollup.config.js         # TypeScript → JS bundler
 │   └── package.json
 ├── frontend/
@@ -208,6 +395,7 @@ View accounts, storage data, leaderboard records, and active matches.
 │   │   ├── nakama.ts            # Nakama WebSocket client
 │   │   ├── App.tsx              # Router & screen management
 │   │   └── App.css              # Animations
+│   ├── .env.example             # Frontend environment template
 │   ├── public/index.html
 │   ├── tailwind.config.js
 │   └── package.json

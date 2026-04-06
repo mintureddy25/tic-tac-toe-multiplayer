@@ -40,10 +40,6 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ result, onPlayAgain, on
   const isDraw = result.winner === 'draw';
   const points = result.points || 0;
 
-  const winnerSymbol = isWinner
-    ? (result.mySymbol === 1 ? 'X' : 'O')
-    : (result.mySymbol === 1 ? 'O' : 'X');
-
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
