@@ -166,9 +166,9 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ result, onPlayAgain, on
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-zinc-950 text-white px-4 py-8 overflow-y-auto">
+    <div className="h-screen w-full flex flex-col items-center bg-zinc-950 text-white px-4 py-6 overflow-hidden">
 
-      <div className="w-full max-w-[420px]">
+      <div className="w-full max-w-[420px] flex flex-col h-full">
 
         {/* Streak badge */}
         {streak >= 2 && showStreak && (
@@ -206,9 +206,9 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ result, onPlayAgain, on
           </div>
         </div>
 
-        {/* Leaderboard card */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4">
+        {/* Leaderboard card - fills remaining height, scrolls internally */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col min-h-0 flex-1">
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <span className="text-sm font-bold text-white">Leaderboard</span>
             <span className="text-xs font-bold tracking-widest text-zinc-600 uppercase">All Time</span>
           </div>
@@ -223,7 +223,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ result, onPlayAgain, on
           ) : leaderboard.length === 0 ? (
             <p className="text-zinc-500 text-sm text-center py-6">No records yet</p>
           ) : (
-            <div className="space-y-1">
+            <div className="overflow-y-auto flex-1 min-h-0 space-y-1">
               {/* Top 10 rows */}
               {top10.map((record, index) => renderLeaderboardRow(record, index, index))}
 
@@ -240,7 +240,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ result, onPlayAgain, on
               {/* View Complete Leaderboard button */}
               {hasMore && onViewLeaderboard && (
                 <button
-                  className="w-full mt-3 text-zinc-400 hover:text-white text-sm font-semibold py-2 transition-colors"
+                  className="w-full mt-3 text-zinc-400 hover:text-white text-sm font-semibold py-2 transition-colors flex-shrink-0"
                   onClick={onViewLeaderboard}
                 >
                   View Complete Leaderboard &rarr;

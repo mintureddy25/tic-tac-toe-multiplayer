@@ -4,42 +4,19 @@ export function rpcGetOnlineCount(
   nk: nkruntime.Nakama,
   payload: string
 ): string {
-  var now = Math.floor(Date.now() / 1000);
-  var systemUserId = '00000000-0000-0000-0000-000000000000';
-
-  // Read current online list
-  var onlineUsers: { [key: string]: number } = {};
+  // Count all players currently in active matches
+  var inMatchCount = 0;
   try {
-    var existing = nk.storageRead([{ collection: 'system', key: 'online_users', userId: systemUserId }]);
-    if (existing && existing.length > 0 && existing[0].value) {
-      onlineUsers = (existing[0].value as any).users || {};
+    var matches = nk.matchList(100, true, undefined, undefined, undefined, undefined);
+    if (matches) {
+      for (var i = 0; i < matches.length; i++) {
+        inMatchCount += matches[i].size || 0;
+      }
     }
   } catch (e) {}
-
-  // Add/update current user
-  onlineUsers[ctx.userId] = now;
-
-  // Remove users not seen in last 60 seconds
-  var keys = Object.keys(onlineUsers);
-  for (var i = 0; i < keys.length; i++) {
-    if (now - onlineUsers[keys[i]] > 60) {
-      delete onlineUsers[keys[i]];
-    }
-  }
-
-  // Save back
-  try {
-    nk.storageWrite([{
-      collection: 'system',
-      key: 'online_users',
-      userId: systemUserId,
-      value: { users: onlineUsers },
-      permissionRead: 2,
-      permissionWrite: 0,
-    }]);
-  } catch (e) {}
-
-  var count = Object.keys(onlineUsers).length;
+  // The caller is online too, even if not in a match
+  // Minimum 1 (the caller themselves)
+  var count = Math.max(1, inMatchCount);
   return JSON.stringify({ count: count });
 }
 

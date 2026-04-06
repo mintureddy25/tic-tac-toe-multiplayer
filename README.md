@@ -2,6 +2,16 @@
 
 A real-time multiplayer Tic-Tac-Toe game with server-authoritative architecture, built with React and Nakama game server.
 
+## Screenshots
+
+| Login | Matchmaking | Gameplay |
+|-------|-------------|----------|
+| ![Login](screenshots/login.png) | ![Matchmaking](screenshots/matchmaking.png) | ![Gameplay](screenshots/gameplay.png) |
+
+| Game Over | Leaderboard |
+|-----------|-------------|
+| ![Game Over](screenshots/gameover.png) | ![Leaderboard](screenshots/leaderboard.png) |
+
 ## Architecture
 
 ```

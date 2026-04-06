@@ -36,3 +36,10 @@
 
 .cell-border-right { border-right: 2px solid #27272a; }
 .cell-border-bottom { border-bottom: 2px solid #27272a; }
+
+/* Thin scrollbar for all scrollable areas */
+*::-webkit-scrollbar { width: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: #52525b; }
+* { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }

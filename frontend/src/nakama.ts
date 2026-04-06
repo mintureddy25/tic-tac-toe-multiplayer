@@ -28,7 +28,9 @@ class NakamaClient {
 
   async authenticate(username: string): Promise<Session> {
     const cleanUsername = username.replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 20);
-    // Device ID based on username - same name = same account
+    // Deterministic device ID from username - same name = same account everywhere
+    // This is simple and works: whoever knows the username can access the account
+    // For a casual game this is fine - no passwords needed
     const deviceId = 'ttt_device_' + cleanUsername.toLowerCase();
     this.session = await this.client.authenticateDevice(deviceId, true, cleanUsername);
     localStorage.setItem('ttt_username', cleanUsername);
