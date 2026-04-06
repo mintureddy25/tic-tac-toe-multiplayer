@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #09090b;
+}
+
+@layer components {
+  .cell-border-right {
+    border-right: 3px solid #1a1a2e;
+  }
+  .cell-border-bottom {
+    border-bottom: 3px solid #1a1a2e;
+  }
+}

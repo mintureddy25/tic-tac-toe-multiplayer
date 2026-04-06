@@ -1,0 +1,9 @@
+name: tic-tac-toe
+data_dir: "./data/"
+logger:
+  level: "INFO"
+runtime:
+  js_entrypoint: "build/index.js"
+console:
+  username: "admin"
+  password: "password"

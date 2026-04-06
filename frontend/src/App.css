@@ -1,0 +1,38 @@
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes drawCircle {
+  0% { stroke-dashoffset: 251; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.x-mark { animation: popIn 0.3s ease-out; }
+.o-circle-svg { animation: popIn 0.3s ease-out; }
+.o-circle-svg circle {
+  stroke-dasharray: 251;
+  stroke-dashoffset: 251;
+  animation: drawCircle 0.5s ease-out forwards;
+}
+.winner-entrance { animation: bounceIn 0.6s ease-out; }
+
+.cell-border-right { border-right: 2px solid #27272a; }
+.cell-border-bottom { border-bottom: 2px solid #27272a; }
