@@ -61,12 +61,47 @@ Faster wins are rewarded with more points. Scores are stored in Nakama Storage (
 - Node.js 16+
 - Docker & Docker Compose
 
+### Environment Setup
+
+Both backend and frontend use `.env` files for configuration. These are **gitignored** — only `.env.example` templates are in the repo.
+
+**Backend:**
+```bash
+cd backend
+cp .env.example .env
+```
+
+Contains database and Nakama console credentials:
+```env
+POSTGRES_DB=nakama
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_secure_password
+NAKAMA_CONSOLE_USERNAME=admin
+NAKAMA_CONSOLE_PASSWORD=your_secure_password
+```
+
+**Frontend:**
+```bash
+cd frontend
+cp .env.example .env
+```
+
+Contains Nakama server connection config:
+```env
+REACT_APP_NAKAMA_HOST=localhost
+REACT_APP_NAKAMA_PORT=7350
+REACT_APP_NAKAMA_SSL=false
+```
+
+For production, update `REACT_APP_NAKAMA_HOST` to your deployed server address and set `REACT_APP_NAKAMA_SSL=true`.
+
 ### Run Locally
 
 **1. Start the backend:**
 
 ```bash
 cd backend
+cp .env.example .env
 npm install
 npm run build
 docker compose up -d
@@ -78,6 +113,7 @@ Wait ~15 seconds for Nakama to initialize. Verify with `curl http://localhost:73
 
 ```bash
 cd frontend
+cp .env.example .env
 npm install
 npm start
 ```
@@ -85,16 +121,6 @@ npm start
 **3. Play:**
 
 Open `http://localhost:3000` in two browser tabs. Enter different names, click "Find Match" in both, and play.
-
-### Environment Variables
-
-Create `frontend/.env` for custom server connection:
-
-```env
-REACT_APP_NAKAMA_HOST=localhost
-REACT_APP_NAKAMA_PORT=7350
-REACT_APP_NAKAMA_SSL=false
-```
 
 ## Deployment
 

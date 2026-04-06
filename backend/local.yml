@@ -4,6 +4,3 @@ logger:
   level: "INFO"
 runtime:
   js_entrypoint: "build/index.js"
-console:
-  username: "admin"
-  password: "password"
